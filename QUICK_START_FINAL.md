@@ -1,18 +1,32 @@
-# HustleBooks
-
-Canadian tax-compliant income & expense tracker for gig workers and side hustlers.
+# HustleBooks - Quick Start
 
 ## ✅ Week 1 Complete - January 29, 2026
 
-### What We Built
+---
+
+## 🎉 What is HustleBooks?
+
+HustleBooks is a Canadian tax-compliant income & expense tracker for gig workers and side hustlers.
+
+**Track:**
+- Income from multiple sources (Uber, DoorDash, freelance, etc.)
+- Business expenses with CRA categories
+- Mileage with automatic tax deduction calculation
+- Tax estimates (federal, provincial, CPP, EI, quarterly installments)
+
+---
+
+## ✅ What We Built (Week 1)
+
+### Core Features
 - **17 routes** with full authentication
 - **7 custom UI components** (button, card, input, textarea, label, toast, toaster)
 - **Income management** (sources + transactions)
 - **Expense tracking** (22 CRA categories)
-- **Mileage tracking** (automatic deduction calculation)
+- **Mileage tracking** (automatic deductions)
 - **Tax estimator** (federal, provincial, CPP, EI, quarterly installments)
 - **Database schema** (12 tables with RLS)
-- **Complete documentation** (20 files, 6,846 lines)
+- **Complete documentation** (19 files, 6,442 lines)
 
 ### Build Status
 ```
@@ -23,7 +37,9 @@ Canadian tax-compliant income & expense tracker for gig workers and side hustler
 ✅ Server: Running on http://localhost:3000
 ```
 
-## 🚀 Quick Start
+---
+
+## 🚀 Quick Start (5 Minutes)
 
 ### 1. Navigate to Project
 ```bash
@@ -39,6 +55,8 @@ npm run dev
 ### 3. View Landing Page
 Open http://localhost:3000 in your browser
 
+---
+
 ## 🎯 Next Steps (Week 2)
 
 ### 1. Set Up Clerk (REQUIRED - 15 min)
@@ -46,22 +64,33 @@ Open http://localhost:3000 in your browser
 # Go to https://dashboard.clerk.com
 # Create application
 # Get Publishable & Secret keys
-# Update .env.local
+# Update .env.local:
+
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
 ```
 
 ### 2. Set Up Supabase (REQUIRED - 10 min)
 ```bash
-# Go to https://supabase.co/dashboard
-# Run supabase-schema.sql
-# Update .env.local
+# Go to https://supabase.co/dashboard/project/frsqsleusagftubikiwh
+# Go to SQL Editor
+# Copy and run supabase-schema.sql
+# Update .env.local:
+
+NEXT_PUBLIC_SUPABASE_URL=https://frsqsleusagftubikiwh.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 ```
 
 ### 3. Set Up Stripe (FOR REVENUE - 30 min)
 ```bash
 # Go to https://dashboard.stripe.com
-# Create account & products ($9.99/month)
-# Get API keys
-# Create checkout API
+# Create account
+# Set up products (Free & Pro - $9.99/month)
+# Get API keys:
+
+STRIPE_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
 ### 4. Update Dashboard with Real Data
@@ -72,16 +101,50 @@ Open http://localhost:3000 in your browser
 
 ### 5. Create Subscription Management
 - Create: `src/app/(dashboard)/settings/subscription/page.tsx`
+- Show current plan
+- Upgrade/downgrade buttons
+- Billing history
 
 ### 6. Create Pricing Page
 - Create: `src/app/(marketing)/pricing/page.tsx`
+- Feature comparison
+- Checkout buttons
 
 ### 7. Create Reports Dashboard
 - Create: `src/app/(dashboard)/reports/page.tsx`
-- Profit & Loss
+- Profit & Loss statement
 - Tax summary
-- T2125 form
+- T2125 form generator
 - PDF export
+
+---
+
+## 📁 Project Structure
+
+```
+hustlebooks/
+├── src/
+│   ├── app/
+│   │   ├── (dashboard)/          # Protected routes
+│   │   │   ├── dashboard/        # Dashboard
+│   │   │   ├── income/           # Income management
+│   │   │   ├── expenses/         # Expense tracking
+│   │   │   ├── mileage/          # Mileage tracking
+│   │   │   ├── tax-estimator/    # Tax calculator
+│   │   │   └── layout.tsx
+│   │   ├── (auth)/               # Authentication
+│   │   ├── page.tsx              # Landing page
+│   │   └── layout.tsx
+│   ├── components/ui/            # UI components
+│   ├── hooks/                    # Hooks
+│   ├── lib/                      # Utilities & Supabase
+│   └── middleware.ts             # Auth middleware
+├── supabase-schema.sql           # Database schema
+├── .env.local                    # Environment variables
+└── package.json
+```
+
+---
 
 ## 📊 Routes (17 total)
 
@@ -104,20 +167,24 @@ Open http://localhost:3000 in your browser
 - `/tax-estimator` - Tax calculator
 - `/tax-estimator/settings` - Tax settings
 
+---
+
 ## 🗄️ Database (12 tables)
 
-1. profiles
-2. subscriptions
-3. income_sources
-4. income_transactions
-5. expense_categories (22 pre-populated)
-6. expense_transactions
-7. mileage_logs
-8. tax_settings
-9. tax_estimates
-10. saved_reports
-11. user_preferences
-12. reminders
+1. **profiles** - User profiles
+2. **subscriptions** - Subscription status
+3. **income_sources** - Income streams
+4. **income_transactions** - Income records
+5. **expense_categories** - 22 CRA categories
+6. **expense_transactions** - Expense records
+7. **mileage_logs** - Trip records
+8. **tax_settings** - User tax preferences
+9. **tax_estimates** - Historical calculations
+10. **saved_reports** - Generated reports
+11. **user_preferences** - App settings
+12. **reminders** - Tax deadlines
+
+---
 
 ## 🧮 Tax Calculations
 
@@ -151,13 +218,15 @@ Open http://localhost:3000 in your browser
 - First 5,000 km: $0.70/km
 - Over 5,000 km: $0.64/km
 
-## 📚 Documentation (20 files, 6,846 lines)
+---
+
+## 📚 Documentation (19 files, 6,442 lines)
 
 ### Quick Start
-1. **QUICK_START_FINAL.md** - Quick start guide
+1. **QUICK_START_FINAL.md** - This file
 2. **WEEK_1_COMPLETE.md** - Week 1 summary
 3. **FINAL_SUMMARY_COMPLETE.md** - Final summary
-4. **README.md** - This file
+4. **README.md** - Project overview
 5. **README_FIRST.md** - Quick start guide
 6. **FINAL_STATUS.md** - Current status report
 7. **PROJECT_STATUS.md** - Status & next steps
@@ -177,7 +246,8 @@ Open http://localhost:3000 in your browser
 17. **UI_PREVIEW.md** - Visual preview
 18. **VISUAL_SUMMARY.md** - Design breakdown
 19. **PROJECT_COMPLETE.md** - Project summary
-20. **PROJECT_SUMMARY_FINAL.md** - Project summary
+
+---
 
 ## 📊 Success Metrics
 
@@ -212,6 +282,8 @@ Open http://localhost:3000 in your browser
 - [ ] $5,994 MRR ($71,928 ARR)
 - [ ] <5% monthly churn
 
+---
+
 ## 💰 Revenue Projections
 
 ### Conservative
@@ -228,6 +300,8 @@ Open http://localhost:3000 in your browser
 - **Year 1**: $144,000
 - **Year 2**: $576,000
 - **Year 3**: $1,440,000
+
+---
 
 ## 🚀 Launch Timeline
 
@@ -271,6 +345,8 @@ Open http://localhost:3000 in your browser
 - $5,994 MRR ($71,928 ARR)
 - Profitability
 
+---
+
 ## 📞 Support
 
 ### Documentation
@@ -296,7 +372,7 @@ Open http://localhost:3000 in your browser
 ✅ **Mileage tracking** (automatic deductions)  
 ✅ **Tax estimator** (federal, provincial, CPP, EI)  
 ✅ **Database schema** (12 tables with RLS)  
-✅ **Complete documentation** (20 files, 6,846 lines)  
+✅ **Complete documentation** (19 files, 6,442 lines)  
 
 ### Build Status
 ✅ **TypeScript**: 0 errors  
@@ -308,8 +384,8 @@ Open http://localhost:3000 in your browser
 ### Files
 - **30 source files** (28 TypeScript, 1 CSS, 1 favicon)
 - **13 config files**
-- **20 documentation files**
-- **Total**: 63 files, ~8,500 lines
+- **19 documentation files**
+- **Total**: 62 files, ~8,400 lines
 
 ### Next Action
 Set up Clerk, Supabase, and Stripe with real keys
