@@ -31,7 +31,7 @@ export async function POST(req: Request) {
             return new NextResponse("User id is required", { status: 400 });
         }
 
-        const supabase = createClient();
+        const supabase = await createClient();
 
         await supabase
             .from("subscriptions")
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
             session.subscription as string
         );
 
-        const supabase = createClient();
+        const supabase = await createClient();
 
         await supabase
             .from("subscriptions")

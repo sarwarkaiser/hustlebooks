@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Overview } from "@/components/dashboard/overview";
 import { RecentSales } from "@/components/dashboard/recent-sales";
 import { Button } from "@/components/ui/button";
@@ -12,22 +12,37 @@ export default async function DashboardPage() {
   const { userId } = auth();
   if (!userId) redirect("/sign-in");
 
-  const supabase = createClient();
+  let income: any[] = [];
+  let expenses: any[] = [];
 
-  // Fetch real data
-  const { data: income } = await supabase
-    .from('income_transactions')
-    .select('amount, date')
-    .eq('user_id', userId);
+  // Only fetch if Supabase is configured
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && 
+      !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project')) {
+    try {
+      const supabase = await createClient();
 
-  const { data: expenses } = await supabase
-    .from('expense_transactions')
-    .select('amount, date')
-    .eq('user_id', userId);
+      // Fetch real data
+      const { data: incomeData } = await supabase
+        .from('income_transactions')
+        .select('amount, date')
+        .eq('user_id', userId);
+      
+      income = incomeData || [];
+
+      const { data: expensesData } = await supabase
+        .from('expense_transactions')
+        .select('amount, date')
+        .eq('user_id', userId);
+      
+      expenses = expensesData || [];
+    } catch (error) {
+      console.log('Supabase not configured, using demo data');
+    }
+  }
 
   // Calculate totals
-  const totalIncome = income?.reduce((acc, curr) => acc + curr.amount, 0) || 0;
-  const totalExpenses = expenses?.reduce((acc, curr) => acc + curr.amount, 0) || 0;
+  const totalIncome = income.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalExpenses = expenses.reduce((acc, curr) => acc + curr.amount, 0);
   const netIncome = totalIncome - totalExpenses;
 
   // Estimate tax (simplified 15% rule for demo)
@@ -50,7 +65,7 @@ export default async function DashboardPage() {
   ];
 
   // Populate chart data from income
-  income?.forEach(tx => {
+  income.forEach(tx => {
     const month = new Date(tx.date).getMonth();
     chartData[month].total += tx.amount;
   });
@@ -137,7 +152,7 @@ export default async function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <RecentSales />
+            <RecentSales sales={income} />
           </CardContent>
         </Card>
       </div>

@@ -14,7 +14,7 @@ export default async function SubscriptionPage() {
         redirect("/sign-in");
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: subscription } = await supabase
         .from("subscriptions")
         .select("*")

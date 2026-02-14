@@ -17,7 +17,7 @@ export async function POST(req: Request) {
         const userEmail = user.emailAddresses[0].emailAddress;
 
         // Get user's subscription from Supabase
-        const supabase = createClient();
+        const supabase = await createClient();
         const { data: dbUser } = await supabase
             .from("subscriptions")
             .select("stripe_customer_id")

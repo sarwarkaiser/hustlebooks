@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Receipt, Plus, Filter, Calendar, DollarSign } from 'lucide-react'
+import { Receipt, Plus, Filter, Calendar, DollarSign, Upload } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export default async function ExpensesPage() {
@@ -40,7 +40,13 @@ export default async function ExpensesPage() {
           <h1 className="text-3xl font-bold text-slate-900">Expenses</h1>
           <p className="text-slate-600 mt-1">Track your business expenses for tax deductions</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/expenses/import">
+              <Upload className="mr-2 h-4 w-4" />
+              Import CSV
+            </Link>
+          </Button>
           <Button variant="outline" asChild>
             <Link href="/expenses/scan">
               <Receipt className="mr-2 h-4 w-4" />
