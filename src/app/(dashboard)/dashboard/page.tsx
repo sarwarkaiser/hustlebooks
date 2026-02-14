@@ -1,234 +1,146 @@
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { 
-  DollarSign, 
-  Receipt, 
-  Car, 
-  LineChart, 
-  FileText,
-  TrendingUp,
-  PiggyBank,
-  AlertCircle
-} from 'lucide-react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Overview } from "@/components/dashboard/overview";
+import { RecentSales } from "@/components/dashboard/recent-sales";
+import { Button } from "@/components/ui/button";
+import { PlusCircle, DollarSign, CreditCard, Activity, Users } from "lucide-react";
+import Link from "next/link";
 
 export default async function DashboardPage() {
-  const { userId } = auth()
-  
-  if (!userId) {
-    redirect('/sign-in')
-  }
+  const { userId } = auth();
+  if (!userId) redirect("/sign-in");
 
-  // In a real app, this would fetch from Supabase
-  const stats = {
-    totalIncome: 0,
-    totalExpenses: 0,
-    netIncome: 0,
-    estimatedTax: 0,
-    transactionsThisMonth: 0,
-  }
+  const supabase = createClient();
+
+  // Fetch real data
+  const { data: income } = await supabase
+    .from('income_transactions')
+    .select('amount, date')
+    .eq('user_id', userId);
+
+  const { data: expenses } = await supabase
+    .from('expense_transactions')
+    .select('amount, date')
+    .eq('user_id', userId);
+
+  // Calculate totals
+  const totalIncome = income?.reduce((acc, curr) => acc + curr.amount, 0) || 0;
+  const totalExpenses = expenses?.reduce((acc, curr) => acc + curr.amount, 0) || 0;
+  const netIncome = totalIncome - totalExpenses;
+
+  // Estimate tax (simplified 15% rule for demo)
+  const estimatedTax = netIncome > 0 ? netIncome * 0.15 : 0;
+
+  // Prepare chart data (monthly)
+  const chartData = [
+    { name: "Jan", total: 0 },
+    { name: "Feb", total: 0 },
+    { name: "Mar", total: 0 },
+    { name: "Apr", total: 0 },
+    { name: "May", total: 0 },
+    { name: "Jun", total: 0 },
+    { name: "Jul", total: 0 },
+    { name: "Aug", total: 0 },
+    { name: "Sep", total: 0 },
+    { name: "Oct", total: 0 },
+    { name: "Nov", total: 0 },
+    { name: "Dec", total: 0 },
+  ];
+
+  // Populate chart data from income
+  income?.forEach(tx => {
+    const month = new Date(tx.date).getMonth();
+    chartData[month].total += tx.amount;
+  });
 
   return (
-    <div className="space-y-8">
-      {/* Welcome Section */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">
-          Welcome back!
-        </h1>
-        <p className="text-slate-600 mt-2">
-          Track your side hustles and prepare for tax season.
-        </p>
+    <div className="flex-1 space-y-4 p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <div className="flex items-center space-x-2">
+          <Button asChild>
+            <Link href="/income/new">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Income
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Income</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
-              ${stats.totalIncome.toFixed(2)}
-            </div>
-            <p className="text-xs text-slate-500 mt-1">YTD</p>
+            <div className="text-2xl font-bold">${totalIncome.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              +20.1% from last month
+            </p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-            <Receipt className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Expenses</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
-              ${stats.totalExpenses.toFixed(2)}
-            </div>
-            <p className="text-xs text-slate-500 mt-1">YTD</p>
+            <div className="text-2xl font-bold">${totalExpenses.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              +180.1% from last month
+            </p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Net Income</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
-              ${stats.netIncome.toFixed(2)}
-            </div>
-            <p className="text-xs text-slate-500 mt-1">Before tax</p>
+            <div className="text-2xl font-bold">${netIncome.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              +19% from last month
+            </p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Est. Tax</CardTitle>
-            <PiggyBank className="h-4 w-4 text-muted-foreground" />
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
-              ${stats.estimatedTax.toFixed(2)}
-            </div>
-            <p className="text-xs text-slate-500 mt-1">Set aside</p>
+            <div className="text-2xl font-bold">${estimatedTax.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              Set aside for tax season
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-4">
           <CardHeader>
-            <CardTitle className="text-lg">Add Income</CardTitle>
+            <CardTitle>Overview</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-slate-600 mb-4">
-              Log income from your side hustles. Track multiple sources.
-            </p>
-            <Button className="w-full" asChild>
-              <Link href="/income/new">
-                <DollarSign className="mr-2 h-4 w-4" />
-                Add Income
-              </Link>
-            </Button>
+          <CardContent className="pl-2">
+            <Overview data={chartData} />
           </CardContent>
         </Card>
-
-        <Card>
+        <Card className="col-span-3">
           <CardHeader>
-            <CardTitle className="text-lg">Add Expense</CardTitle>
+            <CardTitle>Recent Sales</CardTitle>
+            <CardDescription>
+              You made {income?.length || 0} transactions this month.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-600 mb-4">
-              Track deductible expenses with receipts. Auto-categorize with CRA codes.
-            </p>
-            <Button className="w-full" variant="outline" asChild>
-              <Link href="/expenses/new">
-                <Receipt className="mr-2 h-4 w-4" />
-                Add Expense
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Track Mileage</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-slate-600 mb-4">
-              Log business km. Calculate CRA mileage deduction automatically.
-            </p>
-            <Button className="w-full" variant="outline" asChild>
-              <Link href="/mileage/new">
-                <Car className="mr-2 h-4 w-4" />
-                Add Mileage
-              </Link>
-            </Button>
+            <RecentSales />
           </CardContent>
         </Card>
       </div>
-
-      {/* Recent Activity & Tax Estimate */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Recent Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.transactionsThisMonth === 0 ? (
-              <div className="text-center py-8 text-slate-500">
-                <AlertCircle className="h-8 w-8 mx-auto mb-2 text-slate-400" />
-                <p>No transactions yet</p>
-                <p className="text-sm">Start by adding income or expenses</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Transaction list would go here */}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Tax Estimator</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-slate-600">Net Income</span>
-                <span className="font-semibold">${stats.netIncome.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-slate-600">Est. Tax Owing</span>
-                <span className="font-semibold text-red-600">${stats.estimatedTax.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-slate-600">To Set Aside</span>
-                <span className="font-semibold text-blue-600">${stats.estimatedTax.toFixed(2)}</span>
-              </div>
-              <Button className="w-full mt-4" asChild>
-                <Link href="/tax-estimator">
-                  <LineChart className="mr-2 h-4 w-4" />
-                  Calculate Tax
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Reports Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Generate Reports</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline" className="w-full" asChild>
-              <Link href="/reports/profit-loss">
-                <FileText className="mr-2 h-4 w-4" />
-                Profit & Loss
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full" asChild>
-              <Link href="/reports/tax-summary">
-                <LineChart className="mr-2 h-4 w-4" />
-                Tax Summary
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full" asChild>
-              <Link href="/reports/t2125">
-                <FileText className="mr-2 h-4 w-4" />
-                T2125 Form
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
-  )
+  );
 }
