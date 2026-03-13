@@ -1,171 +1,318 @@
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Car, Plus, Calendar, MapPin, DollarSign } from 'lucide-react'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+"use client";
 
-export default async function MileagePage() {
-  const { userId } = auth()
-  
-  if (!userId) {
-    redirect('/sign-in')
-  }
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Car,
+  Plus,
+  MapPin,
+  Calendar,
+  TrendingUp,
+  Gauge,
+  DollarSign,
+  ArrowUpRight,
+  MoreHorizontal,
+  Navigation,
+} from "lucide-react";
+import { EmptyMileageState } from "@/components/ui/empty-state";
+import { motion } from "framer-motion";
 
-  const supabase = await createSupabaseServerClient()
-  
-  const { data: logs, error } = await supabase
-    .from('mileage_logs')
-    .select('*')
-    .eq('user_id', userId)
-    .order('date', { ascending: false })
-    .limit(10) as { data: any[] | null, error: any }
+// Mock data
+const mockTrips = [
+  {
+    id: "1",
+    date: "2024-03-15",
+    purpose: "Client Meeting - Downtown",
+    distance: 45.2,
+    deduction: 31.64,
+    startLocation: "Home",
+    endLocation: "Client Office",
+  },
+  {
+    id: "2",
+    date: "2024-03-14",
+    purpose: "Delivery Route",
+    distance: 32.5,
+    deduction: 22.75,
+    startLocation: "Home",
+    endLocation: "Various",
+  },
+  {
+    id: "3",
+    date: "2024-03-12",
+    purpose: "Supply Run",
+    distance: 18.3,
+    deduction: 12.81,
+    startLocation: "Home",
+    endLocation: "Staples",
+  },
+];
 
-  if (error) {
-    console.error('Error fetching mileage logs:', error)
-  }
+const stats = {
+  totalDistance: 962.5,
+  totalDeduction: 673.75,
+  tripsCount: 24,
+  avgTripDistance: 40.1,
+};
 
-  const totalKm = logs?.reduce((sum, log) => sum + (log.kilometers || 0), 0) || 0
-  const totalDeduction = logs?.reduce((sum, log) => sum + (log.deduction || 0), 0) || 0
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 },
+  },
+};
 
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: "easeOut" as const },
+  },
+};
+
+function StatCard({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  gradient,
+}: {
+  title: string;
+  value: string;
+  subtitle: string;
+  icon: React.ElementType;
+  gradient: string;
+}) {
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Mileage Tracking</h1>
-          <p className="text-slate-600 mt-1">Track business mileage for tax deductions</p>
-        </div>
-        <Button asChild>
-          <Link href="/mileage/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Trip
-          </Link>
-        </Button>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg">
-                <MapPin className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Total Kilometers</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {totalKm.toLocaleString('en-CA', { maximumFractionDigits: 1 })} km
-                </p>
-              </div>
+    <motion.div variants={itemVariants}>
+      <Card className="group hover:border-slate-500 transition-all duration-300 overflow-hidden">
+        <div
+          className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}
+        />
+        <CardContent className="p-6 relative">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-400">{title}</p>
+              <h3 className="text-3xl font-bold text-white mt-2">{value}</h3>
+              <p className="text-xs text-slate-500 mt-1">{subtitle}</p>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-green-500 to-teal-500 rounded-lg">
-                <DollarSign className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Total Deduction</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  ${totalDeduction.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg">
-                <Car className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Trips Logged</p>
-                <p className="text-2xl font-bold text-slate-900">{logs?.length || 0}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Trips */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Recent Trips</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {logs && logs.length > 0 ? (
-            <div className="space-y-3">
-              {logs.map((log) => (
-                <div key={log.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium text-slate-900">{log.purpose || 'Business Trip'}</p>
-                    <p className="text-sm text-slate-500 flex items-center gap-2">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(log.date).toLocaleDateString()}
-                      {log.route && (
-                        <>
-                          <span>•</span>
-                          <span>{log.route}</span>
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-slate-900">
-                      {log.kilometers.toLocaleString('en-CA', { maximumFractionDigits: 1 })} km
-                    </p>
-                    <p className="text-sm text-green-600 font-medium">
-                      ${log.deduction.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-slate-500">
-              <Car className="h-8 w-8 mx-auto mb-2 text-slate-400" />
-              <p>No mileage logs yet</p>
-              <p className="text-sm">Start tracking your business trips</p>
-              <Button className="mt-4" asChild>
-                <Link href="/mileage/new">Add Trip</Link>
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Tax Rate Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">2024 CRA Mileage Rates</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-3 bg-slate-50 rounded-lg">
-              <p className="text-sm text-slate-500">First 5,000 km</p>
-              <p className="text-lg font-bold text-slate-900">$0.70/km</p>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-lg">
-              <p className="text-sm text-slate-500">Over 5,000 km</p>
-              <p className="text-lg font-bold text-slate-900">$0.64/km</p>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-lg">
-              <p className="text-sm text-slate-500">2025 Rate</p>
-              <p className="text-lg font-bold text-slate-900">$0.72/km</p>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-lg">
-              <p className="text-sm text-slate-500">2025 Rate</p>
-              <p className="text-lg font-bold text-slate-900">$0.66/km</p>
+            <div
+              className={`p-3 rounded-xl bg-gradient-to-br ${gradient} shadow-lg`}
+            >
+              <Icon className="w-5 h-5 text-white" />
             </div>
           </div>
         </CardContent>
       </Card>
-    </div>
-  )
+    </motion.div>
+  );
+}
+
+export default function MileagePage() {
+  const hasTrips = mockTrips.length > 0;
+
+  return (
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-8"
+    >
+      {/* Header */}
+      <motion.div
+        variants={itemVariants}
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-white">Mileage Tracker</h1>
+          <p className="text-slate-400 mt-1">
+            Log business trips and track vehicle deductions
+          </p>
+        </div>
+        <Button
+          asChild
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105"
+        >
+          <Link href="/mileage/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Log Trip
+          </Link>
+        </Button>
+      </motion.div>
+
+      {/* CRA Rate Info */}
+      <motion.div variants={itemVariants}>
+        <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/30">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                <Car className="w-5 h-5 text-blue-400" />
+              </div>
+              <div>
+                <p className="font-medium text-white">CRA Mileage Rate 2024</p>
+                <p className="text-sm text-slate-400">
+                  First 5,000 km: $0.70/km | Over 5,000 km: $0.64/km
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-white">$0.70</p>
+              <p className="text-xs text-slate-400">per km</p>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Stats */}
+      <motion.div
+        variants={containerVariants}
+        className="grid gap-4 md:grid-cols-4"
+      >
+        <StatCard
+          title="Total Distance"
+          value={`${stats.totalDistance.toFixed(1)} km`}
+          subtitle="This year"
+          icon={Gauge}
+          gradient="from-blue-500 to-cyan-500"
+        />
+        <StatCard
+          title="Tax Deduction"
+          value={`$${stats.totalDeduction.toFixed(2)}`}
+          subtitle="Total savings"
+          icon={DollarSign}
+          gradient="from-green-500 to-emerald-500"
+        />
+        <StatCard
+          title="Total Trips"
+          value={stats.tripsCount.toString()}
+          subtitle="Business trips"
+          icon={Car}
+          gradient="from-purple-500 to-pink-500"
+        />
+        <StatCard
+          title="Avg. Trip"
+          value={`${stats.avgTripDistance.toFixed(1)} km`}
+          subtitle="Per trip"
+          icon={TrendingUp}
+          gradient="from-yellow-500 to-orange-500"
+        />
+      </motion.div>
+
+      {/* Recent Trips */}
+      <motion.div variants={itemVariants}>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-white">Recent Trips</CardTitle>
+            <Button variant="ghost" size="sm" className="text-slate-400">
+              View All
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {hasTrips ? (
+              <div className="space-y-3">
+                {mockTrips.map((trip, index) => (
+                  <motion.div
+                    key={trip.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="group flex items-center justify-between p-4 bg-slate-800/30 hover:bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-slate-600 transition-all duration-200"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                        <Navigation className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">{trip.purpose}</p>
+                        <div className="flex items-center gap-3 text-sm text-slate-400">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {new Date(trip.date).toLocaleDateString()}
+                          </span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {trip.startLocation} → {trip.endLocation}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <span className="text-lg font-semibold text-white">
+                          {trip.distance.toFixed(1)} km
+                        </span>
+                        <p className="text-sm text-green-400">
+                          +${trip.deduction.toFixed(2)}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-white"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <EmptyMileageState />
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Quick Actions */}
+      <motion.div variants={itemVariants}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-white">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Link href="/mileage/new">
+                <div className="group p-4 bg-slate-800/30 hover:bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-slate-600 transition-all duration-200 cursor-pointer">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                        <Plus className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">Log New Trip</p>
+                        <p className="text-sm text-slate-400">
+                          Record a business trip
+                        </p>
+                      </div>
+                    </div>
+                    <ArrowUpRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
+                  </div>
+                </div>
+              </Link>
+              <div className="group p-4 bg-slate-800/30 hover:bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-slate-600 transition-all duration-200 cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                      <Car className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-white">Vehicle Settings</p>
+                      <p className="text-sm text-slate-400">
+                        Manage your vehicles
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowUpRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
+  );
 }

@@ -1,16 +1,12 @@
-import { authMiddleware } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-export default authMiddleware({
-  publicRoutes: [
-    '/',
-    '/sign-in(.*)',
-    '/sign-up(.*)',
-    '/pricing',
-    '/api/webhooks/clerk',
-    '/api/webhooks/stripe',
-  ],
-})
+// Demo mode - no authentication required
+export function middleware(request: NextRequest) {
+  // Allow all requests in demo mode
+  return NextResponse.next()
+}
 
 export const config = {
-  matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
+  matcher: ['/((?!.+\.[\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
 }

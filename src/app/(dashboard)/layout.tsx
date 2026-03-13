@@ -1,19 +1,22 @@
-import { UserButton, SignedIn, SignedOut, RedirectToSignIn } from '@clerk/nextjs'
 import Link from 'next/link'
-import { 
-  Home, 
-  DollarSign, 
-  Receipt, 
-  Car, 
-  LineChart, 
-  FileText, 
-  Settings,
-  Menu,
-  PiggyBank,
-  Zap,
-  Sparkles
-} from 'lucide-react'
+import { Sidebar } from '@/components/dashboard/sidebar'
 import { Button } from '@/components/ui/button'
+import { Bell, Sparkles, User } from 'lucide-react'
+
+// Check if we're in demo mode
+const isDemoMode = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.includes('demo') || 
+                   !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+
+// Mock User Button for demo mode
+function DemoUserButton() {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+        <User className="w-5 h-5 text-white" />
+      </div>
+    </div>
+  )
+}
 
 export default function DashboardLayout({
   children,
@@ -21,47 +24,53 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2.5 rounded-xl shadow-lg shadow-blue-500/30">
-                <DollarSign className="w-6 h-6 text-white" />
-              </div>
-              <span className="font-bold text-2xl bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                HustleBooks
-              </span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <Sidebar />
+      </div>
+
+      {/* Mobile Header */}
+      <header className="lg:hidden sticky top-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-white/10">
+        <div className="flex items-center justify-between h-16 px-4">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2 rounded-lg">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <div className="flex items-center gap-4">
-              <SignedIn>
-                <UserButton 
-                  appearance={{
-                    elements: {
-                      avatarBox: 'w-10 h-10',
-                    },
-                  }}
-                />
-              </SignedIn>
-              <SignedOut>
-                <Button asChild variant="outline" className="border-slate-600 bg-slate-800/50 hover:bg-slate-700/50">
-                  <Link href="/sign-in">Sign In</Link>
-                </Button>
-              </SignedOut>
-            </div>
+            <span className="font-bold text-lg bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              HustleBooks
+            </span>
+          </Link>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="text-slate-400">
+              <Bell className="w-5 h-5" />
+            </Button>
+            <DemoUserButton />
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <SignedIn>
+      {/* Desktop Header */}
+      <header className="hidden lg:flex fixed top-0 right-0 left-[280px] z-30 h-20 items-center justify-between px-8 bg-slate-950/50 backdrop-blur-sm">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+          <p className="text-sm text-slate-400">Welcome back! Here&apos;s your business overview.</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white relative">
+            <Bell className="w-5 h-5" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+          </Button>
+          <DemoUserButton />
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="lg:ml-[280px] lg:pt-24 p-4 lg:p-8 min-h-screen">
+        <div className="max-w-7xl mx-auto">
           {children}
-        </SignedIn>
-        <SignedOut>
-          <RedirectToSignIn />
-        </SignedOut>
-      </div>
+        </div>
+      </main>
     </div>
   )
 }
